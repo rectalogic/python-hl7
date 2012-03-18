@@ -276,6 +276,17 @@ class Field(Container):
     """
 
 
+class Repetition(Container):
+    """Fourth level of an HL7 message. A field can repeat.
+    """
+
+
+class Component(Container):
+    """Fifth level of an HL7 message. A component is a composite datatypes.
+    Contains sub-components
+    """
+
+
 def create_parse_plan(strmsg):
     """Creates a plan on how to parse the HL7 message according to
     the details stored within the message.
@@ -306,7 +317,7 @@ def create_parse_plan(strmsg):
         separators.append('&')       # sub-component separator
 
     ## The ordered list of containers to create
-    containers = [Message, Segment, Field, Field, Field]
+    containers = [Message, Segment, Field, Repetition, Component]
     return _ParsePlan(separators, containers)
 
 
