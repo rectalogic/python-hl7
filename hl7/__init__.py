@@ -9,6 +9,9 @@
 from .version import get_version
 
 __version__ = get_version()
+__author__ = 'John Paulett'
+__email__ = 'john -at- paulett.org'
+__license__ = 'BSD'
 __copyright__ = 'Copyright 2011, John Paulett <john -at- paulett.org>'
 
 
