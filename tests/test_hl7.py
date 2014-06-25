@@ -39,6 +39,7 @@ sample_file = u'\r'.join([
 SEP = '|^~\&'
 CR_SEP = '\r'
 
+
 class ParseTest(unittest.TestCase):
     def test_parse(self):
         msg = hl7.parse(sample_hl7)
@@ -48,7 +49,7 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(msg[3][0][1], u'OBX')
         self.assertEqual(
             msg[3][3],
-           [u'', [u'', [u'', u'1554-5'], [u'', u'GLUCOSE'], [u'', u'POST 12H CFST:MCNC:PT:SER/PLAS:QN']]]
+            [u'', [u'', [u'', u'1554-5'], [u'', u'GLUCOSE'], [u'', u'POST 12H CFST:MCNC:PT:SER/PLAS:QN']]]
         )
         ## Make sure MSH-1 and MSH-2 are valid
         self.assertEqual(msg[0][1][1], u'|')
@@ -102,8 +103,10 @@ class ParseTest(unittest.TestCase):
 
     def test_subcomponent(self):
         msg = hl7.parse(rep_sample_hl7)
-        self.assertEqual(msg[1][3],
-            [u'', [u'', [u'', u'Component1'], [u'', u'Sub-Component1', u'Sub-Component2'], [u'', u'Component3']]])
+        self.assertEqual(
+            msg[1][3],
+            [u'', [u'', [u'', u'Component1'], [u'', u'Sub-Component1', u'Sub-Component2'], [u'', u'Component3']]]
+        )
 
     def test_elementnumbering(self):
         ## Make sure that the numbering of repetitions. components and
@@ -162,7 +165,6 @@ class ParseTest(unittest.TestCase):
         self.assertEqual(msg2['MSH.21.1.1'], u'COMPONENT 21.1.1')
         self.assertEqual(msg2['MSH.21.1.2.4'], u'SUBCOMPONENT 21.1.2.4')
 
-
     def test_unescape(self):
         msg = hl7.parse(rep_sample_hl7)
 
@@ -204,6 +206,7 @@ class ParseTest(unittest.TestCase):
 
         # message has expected content
         self.assertEqual([s[0][1] for s in msg], [u'MSH', u'EVN', u'PID', u'PD1', u'NK1', u'PV1'])
+
 
 class IsHL7Test(unittest.TestCase):
     def test_ishl7(self):
@@ -306,8 +309,8 @@ class ParsePlanTest(unittest.TestCase):
         n5 = n4.next()
         self.assertTrue(n5 is None)
 
-class ConstructionTest(unittest.TestCase):
 
+class ConstructionTest(unittest.TestCase):
     def test_create_msg(self):
         # Create a message
         MSH = hl7.Segment(SEP[0], [hl7.Field(SEP[1], ['MSH'])])

@@ -24,6 +24,7 @@ NULL = '""'
 # Basic Logger
 logger = logging.getLogger(__file__)
 
+
 def ishl7(line):
     """Determines whether a *line* looks like an HL7 message.
     This method only does a cursory check and does not fully
@@ -34,13 +35,15 @@ def ishl7(line):
     ## Prevent issues if the line is empty
     return line and (line.strip()[:3] in ['MSH']) or False
 
+
 def isfile(line):
     """
-        Files are wrapped in FHS / FTS 
+        Files are wrapped in FHS / FTS
         FHS = file header segment
         FTS = file trailer segment
     """
     return line and (line.strip()[:3] in ['FHS']) or False
+
 
 def split_file(hl7file):
     """
@@ -66,7 +69,6 @@ def split_file(hl7file):
         if not msg[-1] == '\r':
             rv[i] = msg + '\r'
     return rv
-
 
 
 def parse(line):
@@ -202,7 +204,6 @@ class Message(Container):
             return self.assign_field(key, value)
         return list.__setitem__(self, key, value)
 
-
     def segment(self, segment_id):
         """Gets the first segment with the *segment_id* from the parsed
         *message*.
@@ -246,7 +247,7 @@ class Message(Container):
                 |       F   Field
                 |       R   Repeat
                 |       C   Component
-                |       S  Sub-Component 
+                |       S  Sub-Component
                 |
                 |   *Indexing is from 1 for compatibility with HL7 spec numbering.*
 
@@ -352,7 +353,7 @@ class Message(Container):
             |       F   Field
             |       R   Repeat
             |       C   Component
-            |       S  Sub-Component 
+            |       S  Sub-Component
         """
         SEG, SEGn, Fn, Rn, Cn, SCn = None, 1, None, None, None, None
         parts = key.split('.')
@@ -381,25 +382,24 @@ class Message(Container):
         while len(segment) <= Fn:
             segment.append(Field(self.separators[2], []))
         field = segment[Fn]
-        if Rn == None:
+        if Rn is None:
             field[:] = [u"", value]
             return
         while len(field) < Rn + 1:
             field.append(Repetition(self.separators[3], []))
         rep = field[Rn]
-        if Cn == None:
+        if Cn is None:
             rep[:] = [u"", value]
             return
         while len(rep) < Cn + 1:
             rep.append(Component(self.separators[4], []))
         component = rep[Cn]
-        if SCn == None:
+        if SCn is None:
             component[:] = [u"", value]
             return
         while len(component) < SCn + 1:
             component.append(u'')
         component[SCn] = value
-
 
     def escape(self, field, app_map=None):
         """
@@ -428,13 +428,13 @@ class Message(Container):
         esc = str(self.esc)
 
         DEFAULT_MAP = {
-                self.separators[1]: 'F', # 2.10.4
-                self.separators[2]: 'R',
-                self.separators[3]: 'S',
-                self.separators[4]: 'T',
-                self.esc: 'E',
-                '\r': '.br', # 2.10.6
-                }
+            self.separators[1]: 'F',  # 2.10.4
+            self.separators[2]: 'R',
+            self.separators[3]: 'S',
+            self.separators[4]: 'T',
+            self.esc: 'E',
+            '\r': '.br',  # 2.10.6
+        }
 
         rv = []
         for offset, c in enumerate(field):
@@ -442,13 +442,12 @@ class Message(Container):
                 rv.append(esc + app_map[c] + esc)
             elif c in DEFAULT_MAP:
                 rv.append(esc + DEFAULT_MAP[c] + esc)
-            elif ord(c) >= 0x20  and ord(c) <= 0x7E:
+            elif ord(c) >= 0x20 and ord(c) <= 0x7E:
                 rv.append(c.encode('ascii'))
             else:
                 rv.append('%sX%2x%s' % (esc, ord(c), esc))
 
         return ''.join(rv)
-
 
     def unescape(self, field, app_map=None):
         """
@@ -456,7 +455,7 @@ class Message(Container):
 
             To process this correctly, the full set of separators (MSH.1/MSH.2) needs to be known.
 
-            This will convert the identifiable sequences. 
+            This will convert the identifiable sequences.
             If the application provides mapping, these are also used.
             Items which cannot be mapped are removed
 
@@ -480,22 +479,22 @@ class Message(Container):
             return field
 
         DEFAULT_MAP = {
-                'H': u'_', # Override using the APP MAP: 2.10.3
-                'N': u'_', # Override using the APP MAP
-                'F': self.separators[1], # 2.10.4
-                'R': self.separators[2],
-                'S': self.separators[3],
-                'T': self.separators[4],
-                'E': self.esc,
-                '.br': u'\r', # 2.10.6
-                '.sp': u'\r',
-                '.fi': u'',
-                '.nf': u'',
-                '.in': u'    ',
-                '.ti': u'    ',
-                '.sk': u' ',
-                '.ce': u'\r',
-                }
+            'H': u'_',  # Override using the APP MAP: 2.10.3
+            'N': u'_',  # Override using the APP MAP
+            'F': self.separators[1],  # 2.10.4
+            'R': self.separators[2],
+            'S': self.separators[3],
+            'T': self.separators[4],
+            'E': self.esc,
+            '.br': u'\r',  # 2.10.6
+            '.sp': u'\r',
+            '.fi': u'',
+            '.nf': u'',
+            '.in': u'    ',
+            '.ti': u'    ',
+            '.sk': u' ',
+            '.ce': u'\r',
+        }
 
         rv = []
         collecting = []
@@ -522,13 +521,13 @@ class Message(Container):
                         count = int(value[3:])
                         rv.append(ch * count)
 
-                    elif value[0] == 'C': # Convert to new Single Byte character set : 2.10.2
+                    elif value[0] == 'C':  # Convert to new Single Byte character set : 2.10.2
                         # Two HEX values, first value chooses the character set (ISO-IR), second gives the value
                         logger.warn('Error inline character sets [%s] not implemented, field [%s], offset [%s]', value, field, offset)
-                    elif value[0] == 'M': # Switch to new Multi Byte character set : 2.10.2
+                    elif value[0] == 'M':  # Switch to new Multi Byte character set : 2.10.2
                         # Three HEX values, first value chooses the character set (ISO-IR), rest give the value
                         logger.warn('Error inline character sets [%s] not implemented, field [%s], offset [%s]', value, field, offset)
-                    elif value[0] == 'X': # Hex encoded Bytes: 2.10.5
+                    elif value[0] == 'X':  # Hex encoded Bytes: 2.10.5
                         value = value[1:]
                         try:
                             for off in range(0, len(value), 2):
@@ -650,7 +649,7 @@ class _ParsePlan(object):
             ## Return a new instance of this class using the tails of
             ## the separators and containers lists. Use self.__class__()
             ## in case :class:`hl7.ParsePlan` is subclassed
-            return  self.__class__(self.separators[1:], self.containers[1:], self.esc)
+            return self.__class__(self.separators[1:], self.containers[1:], self.esc)
         ## When we have no separators and containers left, return None,
         ## which indicates that we have nothing further.
         return None
@@ -661,4 +660,3 @@ class _ParsePlan(object):
             if text.find(s) >= 0:
                 return True
         return False
-
