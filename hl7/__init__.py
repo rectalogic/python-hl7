@@ -5,6 +5,7 @@
 * Documentation: http://python-hl7.readthedocs.org
 * Source Code: http://github.com/johnpaulett/python-hl7
 """
+from __future__ import unicode_literals
 from copy import deepcopy
 
 from .compat import python_2_unicode_compatible
@@ -128,7 +129,7 @@ def _split(text, plan):
 
     # Parsing of the first segment is awkward because it contains
     # the separator characters in a field
-    if plan.containers[0] == Segment and text[:3] in [u'MSH', u'FHS']:
+    if plan.containers[0] == Segment and text[:3] in ['MSH', 'FHS']:
         seg = text[:3]
         sep0 = text[3]
         sep_end_off = text.find(sep0, 4)
@@ -159,7 +160,7 @@ class Container(list):
         if isinstance(self, (Field, Repetition, Component)):
             ## Add an empty element in position 0 to index from 1 for
             ## compatibility with HL7 spec numbering
-            self.insert(0, u"")
+            self.insert(0, "")
 
     def __str__(self):
         """Join a the child containers into a single string, separated
@@ -218,7 +219,7 @@ class Message(Container):
     def __setitem__(self, key, value):
         """
         """
-        if isinstance(key, basestring) and len(key) > 3 and isinstance(value, basestring):
+        if isinstance(key, six.string_types) and len(key) > 3 and isinstance(value, six.string_types):
             return self.assign_field(key, value)
         return list.__setitem__(self, key, value)
 
@@ -328,7 +329,7 @@ class Message(Container):
             field = segment[Fn]
         else:
             if Rn == 1 and Cn == 1 and SCn == 1:
-                return u''  # Assume non-present optional value
+                return ''  # Assume non-present optional value
             raise(IndexError('Field not present: %s' % key))
 
         rep = field[Rn]
@@ -341,7 +342,7 @@ class Message(Container):
 
         if (Cn) >= len(rep):
             if SCn == 1:
-                return u''  # Assume non-present optional value
+                return ''  # Assume non-present optional value
             raise(IndexError('Component not present: %s' % key))
 
         component = rep[Cn]
@@ -355,7 +356,7 @@ class Message(Container):
             subcomponent = component[SCn]
             return self.unescape(subcomponent)
         else:
-            return u''  # Assume non-present optional value
+            return ''  # Assume non-present optional value
 
     def assign_field(self, key, value):
         """
@@ -401,22 +402,22 @@ class Message(Container):
             segment.append(Field(self.separators[2], []))
         field = segment[Fn]
         if Rn is None:
-            field[:] = [u"", value]
+            field[:] = ["", value]
             return
         while len(field) < Rn + 1:
             field.append(Repetition(self.separators[3], []))
         rep = field[Rn]
         if Cn is None:
-            rep[:] = [u"", value]
+            rep[:] = ["", value]
             return
         while len(rep) < Cn + 1:
             rep.append(Component(self.separators[4], []))
         component = rep[Cn]
         if SCn is None:
-            component[:] = [u"", value]
+            component[:] = ["", value]
             return
         while len(component) < SCn + 1:
-            component.append(u'')
+            component.append('')
         component[SCn] = value
 
     def escape(self, field, app_map=None):
@@ -497,21 +498,21 @@ class Message(Container):
             return field
 
         DEFAULT_MAP = {
-            'H': u'_',  # Override using the APP MAP: 2.10.3
-            'N': u'_',  # Override using the APP MAP
+            'H': '_',  # Override using the APP MAP: 2.10.3
+            'N': '_',  # Override using the APP MAP
             'F': self.separators[1],  # 2.10.4
             'R': self.separators[2],
             'S': self.separators[3],
             'T': self.separators[4],
             'E': self.esc,
-            '.br': u'\r',  # 2.10.6
-            '.sp': u'\r',
-            '.fi': u'',
-            '.nf': u'',
-            '.in': u'    ',
-            '.ti': u'    ',
-            '.sk': u' ',
-            '.ce': u'\r',
+            '.br': '\r',  # 2.10.6
+            '.sp': '\r',
+            '.fi': '',
+            '.nf': '',
+            '.in': '    ',
+            '.ti': '    ',
+            '.sk': ' ',
+            '.ce': '\r',
         }
 
         rv = []
@@ -549,7 +550,7 @@ class Message(Container):
                         value = value[1:]
                         try:
                             for off in range(0, len(value), 2):
-                                rv.append(unichr(int(value[off:off + 2], 16)))
+                                rv.append(six.unichr(int(value[off:off + 2], 16)))
                         except:
                             logger.exception('Error decoding hex value [%s], field [%s], offset [%s]', value, field, offset)
                     else:
@@ -559,22 +560,23 @@ class Message(Container):
             elif c == self.esc:
                 in_seq = True
             else:
-                rv.append(unicode(c))
+                rv.append(six.text_type(c))
 
         return ''.join(rv)
 
 
+@python_2_unicode_compatible
 class Segment(Container):
     """Second level of an HL7 message, which represents an HL7 Segment.
     Traditionally this is a line of a message that ends with a carriage
     return and is separated by pipes. It contains a list of
     :py:class:`hl7.Field` instances.
     """
-    def __unicode__(self):
-        if unicode(self[0]) in [u'MSH', u'FHS']:
-            return unicode(self[0]) + unicode(self[1]) + unicode(self[2]) + unicode(self[1]) + \
-                self.separator.join((unicode(x) for x in self[3:]))
-        return self.separator.join((unicode(x) for x in self))
+    def __str__(self):
+        if six.text_type(self[0]) in ['MSH', 'FHS']:
+            return six.text_type(self[0]) + six.text_type(self[1]) + six.text_type(self[2]) + six.text_type(self[1]) + \
+                self.separator.join((six.text_type(x) for x in self[3:]))
+        return self.separator.join((six.text_type(x) for x in self))
 
 
 class Field(Container):
